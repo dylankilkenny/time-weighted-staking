@@ -1,10 +1,12 @@
 import { Accounts, Signers } from "./";
-import { Greeter } from "../typechain";
+import { TWSToken } from "../typechain/TWSToken";
+import { TWSStaking } from "../typechain/TWSStaking";
 
 declare module "mocha" {
   export interface Context {
     accounts: Accounts;
-    greeter: Greeter;
+    TWSToken: TWSToken;
+    TWSStaking: TWSStaking;
     signers: Signers;
   }
 }

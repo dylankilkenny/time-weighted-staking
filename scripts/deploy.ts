@@ -1,22 +1,35 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-// When running the script with `hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
-import { Contract, ContractFactory } from "ethers";
+import { ContractFactory } from "ethers";
+// import TWSTokenArtifact from "../artifacts/contracts/TWSToken.sol/TWSToken.json";
+import { TWSToken } from "../typechain/TWSToken";
+import { TWSStaking } from "../typechain/TWSStaking";
+// import { BigNumber } from "ethers";
 
 async function main(): Promise<void> {
-  // Hardhat always runs the compile task when running scripts through it.
-  // If this runs in a standalone fashion you may want to call compile manually
-  // to make sure everything is compiled
-  // await run("compile");
+  const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+  const WETH_Ropsten = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
-  // We get the contract to deploy
-  const Greeter: ContractFactory = await ethers.getContractFactory("Greeter");
-  const greeter: Contract = await Greeter.deploy("Hello, Buidler!");
-  await greeter.deployed();
+  const overrides = { gasPrice: 155000000000, gasLimit: 3000000 };
 
-  console.log("Greeter deployed to: ", greeter.address);
+  const supply = ethers.utils.parseEther("10000000");
+
+  const tokenFactory: ContractFactory = await ethers.getContractFactory("TWSToken");
+  const token: TWSToken = (await tokenFactory.deploy(
+    supply.toString(),
+    WETH_Ropsten,
+    uniswapFactory,
+    overrides,
+  )) as TWSToken;
+  console.log("Token deploy tx: ", token.deployTransaction.hash);
+  await token.deployed();
+  console.log("token deployed to: ", token.address);
+
+  const stakingFactory: ContractFactory = await ethers.getContractFactory("TWSStaking");
+  const uniswapPool = await token.uniswapPool();
+  const staking: TWSStaking = (await stakingFactory.deploy(token.address, uniswapPool, overrides)) as TWSStaking;
+  console.log("Staking deploy tx: ", staking.deployTransaction.hash);
+  await staking.deployed();
+  console.log("Staking deployed to: ", staking.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
